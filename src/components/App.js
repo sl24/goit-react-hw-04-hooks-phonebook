@@ -12,10 +12,9 @@ export default function App() {
   const [contacts, setContacts] = useLocalStorage('userContacts', []);
   const [filter, setFilter] = useState('');
 
-  const handleCheckUnique = name => {
-    const isExistContact = !!contacts.find(contact => contact.name === name);
-    isExistContact && alert(`${name} is already in contact`);
-    return !isExistContact;
+  const handleCheckUnique = verifiableName => {
+    const handleName = verifiableName.toLowerCase();
+    return contacts.find(({ name }) => name.toLowerCase() === handleName);
   };
 
   const handleAddContact = newContact => {
@@ -45,7 +44,10 @@ export default function App() {
     <Container>
       <MainTitle>Phonebook</MainTitle>
       <ContactTitle>Form Contact</ContactTitle>
-      <ContactForm onAdd={handleAddContact} onCheckUnique={handleCheckUnique} />
+      <ContactForm
+        handleAddContact={handleAddContact}
+        handleCheckUnique={handleCheckUnique}
+      />
       <ContactTitle>Contacts List</ContactTitle>
       <Filter filter={filter} onChange={handleFilterChange} />
       <ContactList contacts={filterContacts} onRemove={handleRemoveContact} />
