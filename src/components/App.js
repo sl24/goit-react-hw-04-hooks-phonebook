@@ -1,74 +1,54 @@
-import { Component } from 'react';
+import { useState } from 'react';
 
 import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import Filter from './Filter';
 
+import useLocalStorage from '../components/hooks/useLocalStorage';
+
 import { Container, MainTitle, ContactTitle } from './AppStyles';
 
-export default class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export default function App() {
+  const [contacts, setContacts] = useLocalStorage('userContacts', []);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount = () => {
-    const userContacts = JSON.parse(localStorage.getItem('userContacts'));
-    if (userContacts) this.setState({ contacts: userContacts });
-  };
-
-  componentDidUpdate = (prevProps, prevState) => {
-    const { contacts } = this.state;
-    if (contacts !== prevState.contacts) {
-      localStorage.setItem('userContacts', JSON.stringify(contacts));
-    }
-  };
-
-  handleAddContact = newContact =>
-    this.setState(({ contacts }) => ({ contacts: [...contacts, newContact] }));
-
-  handleCheckUnique = name => {
-    const { contacts } = this.state;
-
+  const handleCheckUnique = name => {
     const isExistContact = !!contacts.find(contact => contact.name === name);
-
     isExistContact && alert(`${name} is already in contact`);
-
     return !isExistContact;
   };
 
-  handleRemoveContact = id =>
-    this.setState(({ contacts }) => ({
-      contacts: contacts.filter(contact => contact.id !== id),
-    }));
+  const handleAddContact = newContact => {
+    setContacts(prevContacts => [...prevContacts, newContact]);
+  };
 
-  handleFilterChange = filter => this.setState({ filter });
+  const handleFilterChange = ({ target }) => {
+    const { value } = target;
+    setFilter(value);
+  };
 
-  getVisibleContacts = () => {
-    const { contacts, filter } = this.state;
+  const handleRemoveContact = contactId => {
+    setContacts(prevContacts => [
+      ...prevContacts.filter(({ id }) => id !== contactId),
+    ]);
+  };
+
+  const getVisibleContacts = () => {
     return contacts.filter(contact =>
       contact.name.toLowerCase().includes(filter.toLowerCase()),
     );
   };
 
-  render() {
-    const { filter } = this.state;
-    const visibleContacts = this.getVisibleContacts();
-    return (
-      <Container>
-        <MainTitle>Phonebook</MainTitle>
-        <ContactTitle>Form Contact</ContactTitle>
-        <ContactForm
-          onAdd={this.handleAddContact}
-          onCheckUnique={this.handleCheckUnique}
-        />
-        <ContactTitle>Contacts List</ContactTitle>
-        <Filter filter={filter} onChange={this.handleFilterChange} />
-        <ContactList
-          contacts={visibleContacts}
-          onRemove={this.handleRemoveContact}
-        />
-      </Container>
-    );
-  }
+  const filterContacts = getVisibleContacts();
+
+  return (
+    <Container>
+      <MainTitle>Phonebook</MainTitle>
+      <ContactTitle>Form Contact</ContactTitle>
+      <ContactForm onAdd={handleAddContact} onCheckUnique={handleCheckUnique} />
+      <ContactTitle>Contacts List</ContactTitle>
+      <Filter filter={filter} onChange={handleFilterChange} />
+      <ContactList contacts={filterContacts} onRemove={handleRemoveContact} />
+    </Container>
+  );
 }
